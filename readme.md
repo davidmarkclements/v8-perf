@@ -32,7 +32,7 @@ of V8.
 We'll be looking at the performance of these microbenchmarks on V8 versions 5.1, 5.8, 6.0 and 6.1.
 
 To put each of these versions into context: V8 5.1 is the engine used by Node 6 and uses the Crankshaft
-JIT Compiler, V8 5.8 is used in Node 8.0 to 8.2 and uses a mixture of Crankshaft *and* Turbofan. Version 6.
+JIT Compiler, V8 5.8 is used in Node 8.0 to 8.2 and uses a mixture of Crankshaft *and* Turbofan.
 
 The V8 6.0 engine is due to be in Node 8.3 and V8 version 6.1 is the latest version of
 V8 (at the time of writing) which is integrated with Node on the experimental node-v8
