@@ -51,7 +51,7 @@ In this microbenchmark we compare four cases:
 * calling a function within a `try` block (*sum wrapped*)
 * simply calling a function, no `try/catch` involved (*sum function*) 
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/try-catch.js>  
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/try-catch.js>  
 
 ![](graphs/try-catch-bar.png)
 
@@ -95,7 +95,7 @@ In this microbenchmark we compare two cases:
 * serializing an object after an object's property has been set to `undefined`
 * serializing an object after `delete` has been used to remove an object's property
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/property-removal.js>  
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/property-removal.js>  
 
 ![](graphs/property-removal-bar.png)
 
@@ -132,7 +132,7 @@ Here's our cases in detail:
 * Using a for loop and copying each property across (*for-loop copy arguments*)
 * Using the EcmaScript 2015 spread operator to assign an array of inputs to a reference (*spread operator*)
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/arguments.js>
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/arguments.js>
 
 ![](graphs/arguments-bar.png)
 
@@ -189,7 +189,7 @@ Here's our four cases:
 * a function that is created via `bind` that partially applies the first argument of another function (*bind*)
 * a direct call to a function without any partial application (*direct call*)
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/currying.js>
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/currying.js>
 
 ![](graphs/currying-line.png)
 
@@ -222,7 +222,7 @@ In this benchmark we look at three scenarios:
 * the operations of a small function performed inline, padded out with comments (*long all together*)
 * a call to a big function that has been padded with comments (*sum long function*)
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/function-size.js>
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/function-size.js>
 
 ![](graphs/function-size-bar.png)
 
@@ -269,7 +269,7 @@ This benchmark looks at three cases:
 * a function handling a combination of 32bit and 64bit numbers (*from small to big*)
 * a function handling only numbers that exceed 32bit capacity (*all big*)
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/numbers.js>
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/numbers.js>
 
 ![](graphs/numbers-line.png)
 
@@ -307,7 +307,7 @@ supplied to `reduce` is a fat arrow function (*Object.values functional with arr
 
 We don't bench these cases in V8 5.1 (Node 6) because it doesn't support the native EcmaScript 2015 `Object.values` method.
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/object-iteration.js>
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/object-iteration.js>
 
 ![](graphs/object-iteration-line.png)
 
@@ -341,7 +341,7 @@ We're going to look at three cases:
 * creating objects from an EcmaScript 2015 Class (*class*)
 * creating objects from a constructor function (*constructor*)
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/object-creation.js>
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/object-creation.js>
 
 ![](graphs/object-creation-bar.png)
 
@@ -382,7 +382,7 @@ Here we investigate five cases:
 * a function is only passed object literals (*monomorphic obj literal*)
 * a function is only passed constructor instances (*monomorphic obj with constructor*)
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/polymorphic.js>
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/polymorphic.js>
 
 
 ![](graphs/input-type-bar.png)
@@ -406,7 +406,7 @@ We're looking at two cases:
 * a function that contains the `debugger` keyword (*with debugger*)
 * a function that does not contain the `debugger` keyword (*without debugger*)
 
-**Code:** <https://github.com/davidmarkclements/v8-perf/blob/bench/debugger.js>
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/debugger.js>
 
 ![](graphs/debugger-line.png)
 
