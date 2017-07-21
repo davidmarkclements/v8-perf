@@ -64,8 +64,8 @@ outside a `try` block - this holds true in both Node 6 (V8 5.1) and Node 8.0-8.2
 However for Node 8.3+ the performance hit of calling a function inside a `try` block is negligible.
 
 Nevertheless, don't rest too easy. While working on some performance workshop material, 
-Matteo and I [found a performance bug](http://link.to.bug), where a rather specific combination
-of circumstances (see the [bug](http://link.to.bug)) can lead to an infinite deoptimization/reoptimization 
+Matteo and I [found a performance bug](https://bugs.chromium.org/p/v8/issues/detail?id=6576&q=matteo%20collina&colspec=ID%20Type%20Status%20Priority%20Owner%20Summary%20HW%20OS%20Component%20Stars), where a rather specific combination
+of circumstances (see the [bug](https://bugs.chromium.org/p/v8/issues/detail?id=6576&q=matteo%20collina&colspec=ID%20Type%20Status%20Priority%20Owner%20Summary%20HW%20OS%20Component%20Stars)) can lead to an infinite deoptimization/reoptimization 
 cycle in Turbofan (this would count as a "killer" - a pattern that destroys performance).  
 
 ### Removing properties from objects
@@ -285,6 +285,9 @@ in (32bit) number handling rather than being related to the speed of function ca
 for loops (which are used in the benchmark code).    
 
 ### Iterating over objects
+
+*NOTE: benchmark for this has been updated removed functional with state from object-iteration.js - it's not fast in 0.10, 4, 6, 8 or node-v8, and no one really does that - removed to avoid confusion - added Object.values instead - section is written to that benchmark, will update graph when we redo for V8 6.0*
+
 
 Grabbing all an objects values and doing something with them is a common task and there are many ways to approach
 this. Let's find out which is fastest across our V8 (and Node) versions.
