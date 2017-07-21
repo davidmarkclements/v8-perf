@@ -19,7 +19,8 @@ var runs = 0
   })
 
   function multiply (obj) {
-    for (var i = 0; i < obj.length * 10; i++) {}
+    var max = obj.length * 10
+    for (var i = 0; i < max; i++) {}
     return i
   }
 })()
@@ -43,7 +44,8 @@ var runs = 0
   })
 
   function multiply (obj) {
-    for (var i = 0; i < obj.length * 10; i++) {}
+    var max = obj.length * 10
+    for (var i = 0; i < max; i++) {}
     return i
   }
 })()
@@ -63,7 +65,8 @@ var runs = 0
   })
 
   function multiply (obj) {
-    for (var i = 0; i < obj.length * 10; i++) {}
+    var max = obj.length * 10
+    for (var i = 0; i < max; i++) {}
     return i
   }
 })()
@@ -83,7 +86,8 @@ var runs = 0
   })
 
   function multiply (obj) {
-    for (var i = 0; i < obj.length * 10; i++) {}
+    var max = obj.length * 10
+    for (var i = 0; i < max; i++) {}
     return i
   }
 })()
@@ -107,7 +111,8 @@ var runs = 0
   })
 
   function multiply (obj) {
-    for (var i = 0; i < obj.length * 10; i++) {}
+    var max = obj.length * 10
+    for (var i = 0; i < max; i++) {}
     return i
   }
 })()

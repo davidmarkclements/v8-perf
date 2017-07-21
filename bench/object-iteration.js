@@ -17,7 +17,7 @@ suite.add('for-in', function forIn () {
   }
 })
 
-suite.add('functional', function forIn () {
+suite.add('Object.keys functional', function forIn () {
   var obj = {
     x: 1,
     y: 1,
@@ -28,7 +28,7 @@ suite.add('functional', function forIn () {
   }, 0)
 })
 
-suite.add('functional with arrow', function forIn () {
+suite.add('Object.keys functional with arrow', function forIn () {
   var obj = {
     x: 1,
     y: 1,
@@ -39,23 +39,6 @@ suite.add('functional with arrow', function forIn () {
   }, 0)
 })
 
-suite.add('functional with state', function forIn () {
-  var obj = {
-    x: 1,
-    y: 1,
-    z: 1
-  }
-  var keys = Object.keys(obj)
-  var total = keys.map(toValue, obj).reduce(sum, 0)
-})
-
-function toValue (key) {
-  return this[key]
-}
-
-function sum (acc, value) {
-  return acc + value
-}
 
 suite.add('Object.keys with for loop', function forIn () {
   var obj = {
@@ -69,6 +52,45 @@ suite.add('Object.keys with for loop', function forIn () {
     total += obj[keys[i]]
   }
 })
+
+if (process.versions.node[0] >= 8) {
+
+  suite.add('Object.values functional', function forIn () {
+    var obj = {
+      x: 1,
+      y: 1,
+      z: 1
+    }
+    var total = Object.values(obj).reduce(function (acc, val) {
+      return acc + val
+    }, 0)
+  })
+
+  suite.add('Object.values functional with arrow', function forIn () {
+    var obj = {
+      x: 1,
+      y: 1,
+      z: 1
+    }
+    var total = Object.values(obj).reduce((acc, val) => {
+      return acc + val
+    }, 0)
+  })
+
+  suite.add('Object.values with for loop', function forIn () {
+    var obj = {
+      x: 1,
+      y: 1,
+      z: 1
+    }
+    var vals = Object.values(obj)
+    var total = 0
+    for (var i = 0; i < vals.length; i++) {
+      total += vals[i]
+    }
+  })
+
+}
 
 suite.on('complete', require('./print'))
 
