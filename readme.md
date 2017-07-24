@@ -10,10 +10,10 @@ a primary goal of V8 was to make JavaScript fast, or at least - faster than the 
 For a highly dynamic, loosely typed language this is no easy feat. 
 
 A central piece of the V8 engine that allows it to execute JavaScript at high speed is
-the JIT (Just In Time) Compiler. This is a dynamic compiler that can optimize code during
+the JIT (Just In Time) compiler. This is a dynamic compiler that can optimize code during
 runtime. When V8 was first built the JIT Compiler was dubbed: Crankshaft. 
 
-As an outside observer, and user of JavaScript since the 90's it has seemed that 
+As an outside observer and user of JavaScript since the 90's, it has seemed that 
 fast and slow paths in JavaScript (whatever the engine may be) were often counter-intuitive, the
 reasons for apparently slow JavaScript code were often difficult to fathom.
 
@@ -22,7 +22,7 @@ performant Node.js code, and of course this means knowing which approaches are f
 or slow with regards to V8. 
 
 Now it's time for us to challenge all our assumptions about performance, because V8 
-have written a new JIT Compiler: Turbofan.
+has a new JIT Compiler: Turbofan. (or "the V8 team has written")
 
 Starting with the more commonly known "V8 Killers" (a term that no longer makes sense in a Turbofan context)
 and moving towards the more obscure discoveries Matteo and I have made around Crankshaft performance,
@@ -37,6 +37,8 @@ JIT Compiler, V8 5.8 is used in Node 8.0 to 8.2 and uses a mixture of Crankshaft
 The V8 6.0 engine is due to be in Node 8.3 and V8 version 6.1 is the latest version of
 V8 (at the time of writing) which is integrated with Node on the experimental node-v8
 repo at https://github.com/nodejs/node-v8.
+
+(I think, just in case, you should include, that this article is about Js engine performance. Before optimizing on this level, one should think about API design and algorithms.)
 
 Let's take a look at our microbenchmarks and on the other side we'll talk about what this means for the future. 
 
@@ -77,7 +79,7 @@ The problem with `delete` boils down to the way V8 handles the dynamic nature of
 objects and the (also potentially dynamic) prototype chains that make property lookups 
 even more complex at an implementation level.
 
-The V8 engines technique for making property objects high speed is to create a class in the C++ 
+The V8 engine's technique for making property objects high speed is to create a class in the C++ 
 layer based on the "shape" of the object. The shape is essentially what keys and values a property 
 has (including the prototype chain keys and values). These are known as "hidden classes". However, 
 this is an optimization that occurs on objects at runtime, if there's uncertainty about the shape
@@ -85,8 +87,8 @@ of the object V8 has another mode for property retrieval: hash table lookup. The
 significantly slower. Historically, when we `delete` a key from the object subsequent property access
 will be a hash table look up. This is why we avoid `delete` and instead set properties to `undefined`
 which leads to the same result as far as values are concerned but may be problematic when checking for
-property existence; however its often good enough for pre-serialization redaction because `JSON.stringify`
-does not include `undefined` values in it's output (`undefined` isn't a valid value in the JSON specification). 
+property existence; however it's often good enough for pre-serialization redaction because `JSON.stringify`
+does not include `undefined` values in its output (`undefined` isn't a valid value in the JSON specification). 
 
 Now, let's see if the newer Turbofan implementation addresses the `delete` problem.
 
@@ -99,16 +101,16 @@ In this microbenchmark we compare two cases:
 
 ![](graphs/property-removal-bar.png)
 
-In V8 6.1 (not yet used in any Node releases) the `delete` keyword gets *extremeley* fast,
+In V8 6.1 (not yet used in any Node releases) the `delete` keyword gets *extremeley* fast (I think it's not the delete itself thats fast, but operations on the object with a deleted property, maybe reword it?),
 faster, even, than setting to `undefined`. This is excellent news because now we can do 
 the right thing *and* it's the fastest option. 
 
 ### Leaking and arrayifying `arguments`
 
 A common problem with the implicit `arguments` object available to normal JavaScript functions (as opposed to
-fat array functions which do not have `arguments` objects) is that it's array-like but *not* an array. 
+fat arrow functions which do not have `arguments` objects) is that it's array-like but *not* an array. 
 
-In order to use array methods or most array behavior the indexing properties of the `arguments` object have 
+In order to use array methods or most array behavior, the indexing properties of the `arguments` object have 
 be copied to an array. In the past JavaScripters have had a propensity towards equating *less code* with 
 *faster* code. Whilst this rule of thumb yields a payload-size benefit for browser-side code, the same rule
 can cause pain on the server side where code size is far less important than execution speed. So a seductively terse
@@ -194,8 +196,8 @@ Here's our four cases:
 ![](graphs/currying-line.png)
 
 The line graph visualization of this benchmark's results clearly illustrates how the 
-approaches converge in later versions of V8. Interestingly partial application
-using fat arrow functions is *significantly* faster that using normal functions (at 
+approaches converge in later versions of V8. Interestingly, partial application
+using fat arrow functions is *significantly* faster than using normal functions (at 
 least in our microbenchmark case). In fact it almost traces the performance profile 
 of making a direct call. In V8 5.1 (Node 6) and 5.8 (Node 8.0-8.2) `bind` is
 very slow by comparison, and it seems clear that using fat arrows for partial application
@@ -212,7 +214,7 @@ of partial application with differently sized data structures to get a fuller pi
 
 The size of a function, including it's signature, the white space and even comments can affect 
 whether the function can be inlined by V8 or not. Yes: adding a comment to your function 
-may cause a performance hit somewhere in the range of a 10% speed reduction.
+may cause a performance hit somewhere in the range of a 10% speed reduction. (I need to look up until when we used character cound. It's been ast node count, not character count, for quite a while, since last week it's bytecode size, https://chromium-review.googlesource.com/c/570055/. Either way, comments don't count towards that. If character length was still true in 51, I'm not a big fan of including it, as many people will skim and remember that comments/long variable names influence inlining. Want to reword this section base on that we use ast node count?)
 
 Will this change with Turbofan? Let's find out. 
 
@@ -252,7 +254,7 @@ inlining is a potential footgun; it's better to leave inlining up to the compile
 
 ### 32bit vs 64bit integers
 
-It's rather well known that JavaScript only has one number type: `Number`. 
+It's rather well known that JavaScript only has one number type: `Number`. (Maybe a sentence about the BigInt proposal should be included here?)
 
 However, V8 is implemented in C++ so a choice has to be made
 on the underlying type for a numeric JavaScript value. 
@@ -289,7 +291,7 @@ for loops (which are used in the benchmark code).
 *NOTE: benchmark for this has been updated removed functional with state from object-iteration.js - it's not fast in 0.10, 4, 6, 8 or node-v8, and no one really does that - removed to avoid confusion - added Object.values instead - section is written to that benchmark, will update graph when we redo for V8 6.0*
 
 
-Grabbing all an objects values and doing something with them is a common task and there are many ways to approach
+Grabbing all of an objects values (properties?) and doing something with them is a common task and there are many ways to approach
 this. Let's find out which is fastest across our V8 (and Node) versions.
 
 This benchmark measures four cases for all V8 versions benched:
@@ -314,7 +316,7 @@ We don't bench these cases in V8 5.1 (Node 6) because it doesn't support the nat
 
 ![](graphs/object-iteration-line.png)
 
-In Node 6 (V8 5.1) and Node 8.0-8.2 (V8 5.8) using `for`-`in` is by far the fastest way to loop over an objects keys,
+In Node 6 (V8 5.1) and Node 8.0-8.2 (V8 5.8) using `for`-`in` is by far the fastest way to loop over an object's keys,
 then access the values of the object. At roughly 40 million operations per second, it's 5 times faster than 
 the next closest approach which is `Object.keys` at around 8 million op/s.
 
@@ -331,7 +333,7 @@ Using `Object.values` to get values directly is slower than using `Object.keys` 
 the values in the object. On top of that, procedural loops remain faster than functional programming.
 So there may be some more work to do when it comes to iterating over objects. 
 
-Also, for those who've used `for`-`in` for it's performance benefits it's going to be a painful 
+Also, for those who've used `for`-`in` for its performance benefits it's going to be a painful 
 moment when we lose a large chunk of speed with no alternative approach available.
 
 ### Creating objects
@@ -373,7 +375,7 @@ or constructors) as a general best coding practice.
 When we always input the same type of argument into a function (say, we always pass a string), we are using that function 
 in a monomorphic way. Some functions are written to be polymorphic - which means that the same parameter can be handled
 as different types - so maybe it can handle a string, or an array or an object and handle it accordingly. This can make
-for nice interfaces in some circumstances but has a negative impact on performance. 
+for nice interfaces in some circumstances but has a negative impact on performance. ("Type" is not quiete correct here, and porbably easily confused with TypeScript types, Why not use the terminology introduces above of hidden classes?)
 
 Let's see how monomorphic and polymorphic cases do in our benchmarks.
 
@@ -395,7 +397,7 @@ across all V8 versions tested.
 
 If we're writing code that needs to be optimal, that is a function that will be called many times over, 
 then we should avoid using polymorphism. On the other hand, if it's only called once or twice, say an instantiating/setup function,
-then a polymorphic API *might* be acceptable.
+then a polymorphic API *might* be acceptable. (Once or twice is by definition monomorphic - 1st call is the pre-monomorphic state, second call goes into monomorphic). 
 
 
 ### The `debugger` keyword
@@ -431,7 +433,7 @@ for the most performant cases.
 
 If you've had an eye on JavaScript performance for a while, and adapted coding behaviors to the quirks
 of the underlying engine it's nearly time to unlearn some techniques. If you've focused on best practices,
-writing generally *good* JavaScript then well done, thanks to the V8 teams tireless efforts, 
+writing generally *good* JavaScript then well done, thanks to the V8 team's tireless efforts, 
 a performance reward is coming.   
 
 
