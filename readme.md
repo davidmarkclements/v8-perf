@@ -101,7 +101,7 @@ In this microbenchmark we compare two cases:
 
 ![](graphs/property-removal-bar.png)
 
-In V8 6.1 (not yet used in any Node releases) the `delete` keyword gets *extremeley* fast (I think it's not the delete itself thats fast, but operations on the object with a deleted property, maybe reword it?),
+In V8 6.1 (not yet used in any Node releases) the `delete` keyword gets *extremeley* fast (I think it's not the delete itself that's fast, but operations on the object with a deleted property, maybe reword it?),
 faster, even, than setting to `undefined`. This is excellent news because now we can do 
 the right thing *and* it's the fastest option. 
 
@@ -214,7 +214,7 @@ of partial application with differently sized data structures to get a fuller pi
 
 The size of a function, including it's signature, the white space and even comments can affect 
 whether the function can be inlined by V8 or not. Yes: adding a comment to your function 
-may cause a performance hit somewhere in the range of a 10% speed reduction. (I need to look up until when we used character cound. It's been ast node count, not character count, for quite a while, since last week it's bytecode size, https://chromium-review.googlesource.com/c/570055/. Either way, comments don't count towards that. If character length was still true in 51, I'm not a big fan of including it, as many people will skim and remember that comments/long variable names influence inlining. Want to reword this section base on that we use ast node count?)
+may cause a performance hit somewhere in the range of a 10% speed reduction. (I need to look up until when we used character count. It's been ast node count, not character count, for quite a while, since last week it's bytecode size, https://chromium-review.googlesource.com/c/570055/. Either way, comments don't count towards that. If character length was still true in 51, I'm not a big fan of including it, as many people will skim and remember that comments/long variable names influence inlining. Want to reword this section base on that we use ast node count?)
 
 Will this change with Turbofan? Let's find out. 
 
