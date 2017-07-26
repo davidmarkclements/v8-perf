@@ -225,9 +225,7 @@ of partial application with differently sized data structures to get a fuller pi
 
 The size of a function, including it's signature, the white space and even comments can affect
 whether the function can be inlined by V8 or not. Yes: adding a comment to your function
-may cause a performance hit somewhere in the range of a 10% speed reduction. (I need to look up until when we used character count. It's been ast node count, not character count, for quite a while, since last week it's bytecode size, https://chromium-review.googlesource.com/c/570055/. Either way, comments don't count towards that. If character length was still true in 51, I'm not a big fan of including it, as many people will skim and remember that comments/long variable names influence inlining. Want to reword this section base on that we use ast node count?)
-
-Will this change with Turbofan? Let's find out.
+may cause a performance hit somewhere in the range of a 10% speed reduction. Will this change with Turbofan? Let's find out.
 
 In this benchmark we look at three scenarios:
 
@@ -253,7 +251,10 @@ inlining abilities (i.e. there has to be a jump between clusters of serially inl
 
 In 5.9 and upwards (Node 8.3+), any size added by irrelevant characters such as whitespace or comments
 has no bearing on the functions performance. Although notably, again, we see that overall performance
-of functions decreases.
+of functions decreases. This is due to **turbofan**, which is now using
+Abstract Syntax Tree node count, rather the character size: instead of
+of checking the text of the function, it consider the instructions on
+the functions, so that **variable names and comments does not matter anymore**.
 
 The takeaway here should still be to keep functions small. At the moment we still have to avoid
 over-commenting (and even whitespace) inside functions. Also if you want the absolute fastest speed,
@@ -261,7 +262,6 @@ manually inlining (removing the call) is consistently the fastest approach. Of c
 against the fact that after a certain size (of actually executable code) a function won't be inlined, so copy-pasting
 code from other functions into your function could cause performance problem. In other words manual
 inlining is a potential footgun; it's better to leave inlining up to the compiler in most cases.
-
 
 ### 32bit vs 64bit integers
 
