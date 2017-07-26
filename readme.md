@@ -23,29 +23,32 @@ fast and slow paths in JavaScript (whatever the engine may be) were often counte
 reasons for apparently slow JavaScript code were often difficult to fathom.
 
 In recent years [Matteo Collina](https://twitter.com/matteocollina) and [I](https://twitter.com/davidmarkclem)
-have focused on finding out how to write performant Node.js code, and of course this means
-knowing which approaches are fast or slow with regards to V8.
+have focused on finding out how to write performant Node.js code. Of course this means
+knowing which approaches are fast and which approaches are slow when our code executed by 
+the V8 JavaScript engine.
 
 Now it's time for us to challenge all our assumptions about performance, because the V8 team has
 has written a new JIT Compiler: Turbofan.
 
-Starting with the more commonly known "V8 Killers" - a term that no longer makes sense in a Turbofan context -
+Starting with the more commonly known "V8 Killers" (pieces of code which
+cause optimization bail-out - a term that no longer makes sense in a Turbofan context)
 and moving towards the more obscure discoveries Matteo and I have made around Crankshaft performance,
 we're going to walk through a series of microbenchmark results and observations over progressing versions
 of V8.
 
-We'll be looking at the performance of these microbenchmarks on V8 versions 5.1, 5.8, 6.0 and 6.1.
-Some of the optimizations we will check are previous "V8 Killers" and bad practices avoided
-by the community at large, while some other optimizations are last resorts:
-**before optimizing at this level, one should think about API design,
-algorithms and data structures**.
+Of course, before optimizing for V8 logic paths, we should first focus on API design, algorithms and date structures. 
+These microbenchmarks are meant as indicators of how JavaScript execution in Node is changing. We can use these indicators 
+to influence our general code style and the ways we improve performance *after* we've applied the usual optimizations.
+
+We'll be looking at the performance of these microbenchmarks on V8 versions 5.1, 5.8, 5.9, 6.0 and 6.1.
 
 To put each of these versions into context: V8 5.1 is the engine used by Node 6 and uses the Crankshaft
 JIT Compiler, V8 5.8 is used in Node 8.0 to 8.2 and uses a mixture of Crankshaft *and* Turbofan.
 
-The V8 6.0 engine is due to be in Node 8.3 and V8 version 6.1 is the latest version of
-V8 (at the time of writing) which is integrated with Node on the experimental node-v8
-repo at https://github.com/nodejs/node-v8.
+Currently either 5.9 or 6.0 engine is due to be in Node 8.3 (or possibly Node 8.4) and 
+V8 version 6.1 is the latest version of V8 (at the time of writing) which is integrated with Node on 
+the experimental node-v8 repo at https://github.com/nodejs/node-v8. In other words, V8 version 6.1 will 
+eventually be in some future version of Node. 
 
 Let's take a look at our microbenchmarks and on the other side we'll talk about what this
 means for the future.
@@ -210,7 +213,7 @@ least in our microbenchmark case). In fact it almost traces the performance prof
 of making a direct call. In V8 5.1 (Node 6) and 5.8 (Node 8.0-8.2) `bind` is
 very slow by comparison, and it seems clear that using fat arrows for partial application
 is the fastest option. However `bind` speeds up by an order of magnitude
-from V8 version 6.0 (Node 8.3+) becoming the fastest approach (by an almost negligible amount)
+from V8 version 5.9 (Node 8.3+) becoming the fastest approach (by an almost negligible amount)
 in version 6.1 (future Node).
 
 The fastest approach to currying over all versions is using fat arrow functions. Code using
@@ -248,7 +251,7 @@ function has noticeably increased; this may be due to the smushing together of C
 elements whereas one function may be in Crankshaft the other may be in Turbofan causing disjoints in
 inlining abilities (i.e. there has to be a jump between clusters of serially inlined functions).
 
-In 6.0 (Node 8.3) and upwards, any size added by irrelevant characters such as whitespace or comments
+In 5.9 and upwards (Node 8.3+), any size added by irrelevant characters such as whitespace or comments
 has no bearing on the functions performance. Although notably, again, we see that overall performance
 of functions decreases.
 
@@ -283,13 +286,13 @@ This benchmark looks at three cases:
 
 ![](graphs/numbers-line.png)
 
-We can see from the graph that whether it's Node 6 (V8 5.1) or Node 8 (V8 5.8 or V8 6.0)
+We can see from the graph that whether it's Node 6 (V8 5.1) or Node 8 (V8 5.8)
 or even some future version of Node this observation holds true. Numbers (integers)
 greater than 65535 will cause functions to run between a half and two thirds of the speed.
 So, if you have long numeric ID's - put them in strings.
 
 It's also quite noticeable that numbers in the 32bit range have a speed increase between
-Node 6 (V8 5.1) and Node 8.1 and 8.2 (V8 5.8) but slow significantly in Node 8.3 (V8 6.0) and beyond (V8 6.1).
+Node 6 (V8 5.1) and Node 8.1 and 8.2 (V8 5.8) but slow significantly in Node 8.3+ (V8 5.9+).
 Since the large numbers don't change speed at all, it's likely that this genuinely is a slow-down
 in (32bit) number handling rather than being related to the speed of function calls or
 for loops (which are used in the benchmark code).
@@ -309,7 +312,7 @@ inside the iterator function supplied to `reduce` (*Object.keys functional*)
 inside the iterator function supplied to `reduce` where the iterator function is a fat arrow function (*Object.keys functional with arrow*)
 * looping over the array returned from `Object.keys` with a `for` loop, accessing the object values within the loop (*Object.keys with for loop*)
 
-If also benchmarks an additional three cases for V8 5.8, 6.0 and 6.1
+We also benchmarks an additional three cases for V8 5.8, 5.9, 6.0 and 6.1
 
 * using `Object.values` and iterating over the values using the Array `reduce` method, (*Object.values functional*)
 * using `Object.values` and iterating over the values using the Array `reduce` method, where the iterator function
@@ -329,8 +332,8 @@ the next closest approach which is `Object.keys` at around 8 million op/s.
 In V8 6.0 (Node 8.3) something happens to `for`-`in` and it cuts down to one quarter the speed of
 former versions, but is still faster than any other approach.
 
-In V8 6.1 (the future of Node), the speed `Object.keys` leaps forward and becomes faster than
-using `for`-`in` - but no where near the speed of `for-in` in V8 5.1 and 5.8 (Node 6, Node 8.0-8.2).
+In V8 6.1 (the future of Node), the speed of `Object.keys` leaps forward and becomes faster than
+using `for`-`in` - but no where near the speed of `for`-`in` in V8 5.1 and 5.8 (Node 6, Node 8.0-8.2).
 
 A driving principle behind Turbofan seems to be to optimize for intuitive coding behavior. That is,
 optimize for the case that is most ergonomic for the developer.
@@ -363,7 +366,7 @@ the speed of using an object literal of a constructor. So.. you know, watch out 
 
 In V8 5.9 performance evens out again.
 
-Then in V8 6.0 (Node 8.3) and 6.1 (which isn't currently in any Node release) object creation
+Then in V8 6.0 (hopefully Node 8.3, or otherwise 8.4) and 6.1 (which isn't currently in any Node release) object creation
 speed goes *insane*!! Over 500 million op/s! That's incredible.
 
 ![](https://media.giphy.com/media/2mxA3QHH4aHFm/giphy.gif)
@@ -399,6 +402,10 @@ Here we investigate five cases:
 The data visualized in our graph shows conclusively that monomorphic functions outperform polymorphic functions
 across all V8 versions tested.
 
+There's a much wider performance gap between monomorphic and polymorphic functions in V8 6.1 (future Node),
+which compounds the point further. However it's worth noting that this based on the node-v8 branch which 
+uses a sort of nightly-build V8 version - it may not end up being a concrete characteristic in V8 6.1.   
+
 If we're writing code that needs to be optimal, that is a function that will be called many times over,
 then we should avoid using polymorphism. On the other hand, if it's only called once or twice, say an instantiating/setup function,
 then a polymorphic API is acceptable.
@@ -423,38 +430,45 @@ across all V8 versions tested.
 
 The *without debugger* line noticeably drops over successive V8 versions, we'll talk about this in the [Summary](#summary).
 
-### A real world benchmark: Pino
+### A real world benchmark: Logger comparison
 
-Apart from microbenchmarks, we also checked the performance of the most popular loggers for Node.js,
-including [Pino](http://getpino.io).
+In addition to our microbenchmarks we can take a look at the holistic effects of our
+V8 versions by using benchmarks of most popular loggers for Node.js that Matteo and I
+put together while we were creating [Pino](http://getpino.io).
 
-The following barchart represent the performance of the most popular
-loggers in Node.js 6.11:
+The following bar chart represent the performance of the most popular
+loggers in Node.js 5.9 (Crankshaft):
 
 ![](graphs/loggers-updated.png)
 
-While the following is the same benchmarks using V8 5.9:
+While the following is the same benchmarks using V8 6.1 (Turbofan):
 
 ![](graphs/loggers-turbofan.png)
 
-In many cases, it leads to a 2x improvement.
+While all of the logger benchmarks improve in speed (by roughly 2x), the Winston logger derives the
+most benefit from the new Turbofan JIT compiler. This seems to demonstrate the speed convergence 
+we see among various approaches in our microbenchmarks: the slower approaches in Crankshaft 
+are significantly faster in Turbofan while the fast approaches in Crankshaft tend get a little slower Turbofan. 
+Winston, being the slowest, is likely using the approaches which are slower in Crankshaft but much faster 
+in Turbofan whereas Pino is optimized to use the fastest Crankshaft approaches. While a speed increase 
+is observed in Pino, it's to a much lesser degree.  
 
 ### Summary
 
-Some of the benchmarks show that while slow cases in V8 5.1 and V8 5.8 become faster with the advent of full Turbofan enablement
+Some of the benchmarks show that while slow cases in V8 5.1, V8 5.8 and 5.9 become faster with the advent of full Turbofan enablement
 in V8 6.0 and V8 6.1, the fast cases also slow down, often matching the increased speed of the slow cases.
 
 Much of this is due to the cost of making function calls in Turbofan (V8 6.0 and up). The idea behind
-Turbofan was to optimize for common cases and eliminate commonly used "V8 Killers" (pieces of code which
-cause optimization bail-out). This has resulted in a net performance benefit for (Chrome) browser and
+Turbofan was to optimize for common cases and eliminate commonly used "V8 Killers". This has resulted in a net performance benefit for (Chrome) browser and
 server (Node) applications. The trade-off appears to be (at least initially) a speed decrease
-for the most performant cases.
+for the most performant cases. Our logger benchmark comparison indicates that the general net effect 
+of Turbofan characteristics is comprehensive performance improvements even across significantly 
+contrasting code bases (e.g. Winston vs Pino).  
 
 If you've had an eye on JavaScript performance for a while, and adapted coding behaviors to the quirks
 of the underlying engine it's nearly time to unlearn some techniques. If you've focused on best practices,
 writing generally *good* JavaScript then well done, thanks to the V8 team's tireless efforts,
 a performance reward is coming.
-
 
 ---
 
