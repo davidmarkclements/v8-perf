@@ -5,7 +5,7 @@ Authors: [David Mark Clements](https://twitter.com/davidmarkclem) and
 [Matteo Collina](https://twitter.com/matteocollina)
 
 Reviewers: [Franziska Hinkelmann](https://twitter.com/fhinkel) and
-[Benedikt Meurer](https://twitter.com/bmeurer)
+[Benedikt Meurer](https://twitter.com/bmeurer) from the V8 team.
 
 Since it's inception Node.js has depended on the V8 JavaScript engine to provide
 code execution in the language we all know and love. The V8 JavaScript engine is
@@ -361,12 +361,12 @@ In Node 6 (V8 5.1) all approaches are pretty even.
 In Node 8.0-8.2 (V8 5.8) instances created from EcmaScript 2015 classes are less than half
 the speed of using an object literal of a constructor. So.. you know, watch out for that.
 
-In Node 8.3 (V8 5.9) performance evens out again.
+In V8 5.9 performance evens out again.
 
-Then in V8 6.1 (which isn't currently in any Node release) object creation speed goes
-*insane*!! Over 500 million op/s! That's incredible.
+Then in V8 6.0 (Node 8.3) and 6.1 (which isn't currently in any Node release) object creation
+speed goes *insane*!! Over 500 million op/s! That's incredible.
 
-*clapping gif*
+![](https://media.giphy.com/media/2mxA3QHH4aHFm/giphy.gif)
 
 We can see that objects created by constructors are slightly slower. So our best bet
 for future friendly performant code is to always prefer object literals. This suits us fine,
@@ -422,6 +422,22 @@ Yep. Just the presence of the `debugger` keyword is terrible for performance
 across all V8 versions tested.
 
 The *without debugger* line noticeably drops over successive V8 versions, we'll talk about this in the [Summary](#summary).
+
+### A real world benchmark: Pino
+
+Apart from microbenchmarks, we also checked the performance of the most popular loggers for Node.js,
+including [Pino](http://getpino.io).
+
+The following barchart represent the performance of the most popular
+loggers in Node.js 6.11:
+
+![](graphs/loggers-updated.png)
+
+While the following is the same benchmarks using V8 5.9:
+
+![](graphs/loggers-turbofan.png)
+
+In many cases, it leads to a 2x improvement.
 
 ### Summary
 
