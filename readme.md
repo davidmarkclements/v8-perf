@@ -250,11 +250,13 @@ elements whereas one function may be in Crankshaft the other may be in Turbofan 
 inlining abilities (i.e. there has to be a jump between clusters of serially inlined functions).
 
 In 5.9 and upwards (Node 8.3+), any size added by irrelevant characters such as whitespace or comments
-has no bearing on the functions performance. Although notably, again, we see that overall performance
-of functions decreases. This is due to **turbofan**, which is now using
+has no bearing on the functions performance.  This is due to Turbofan, which is now using
 Abstract Syntax Tree node count, rather the character size: instead of
 of checking the text of the function, it consider the instructions on
-the functions, so that **variable names and comments does not matter anymore**.
+the functions, so that **whitespace, variable name character count, function signatures and comments
+will no longer factor in whether a function will inline.**
+
+Notably, again, we see that overall performance of functions decreases.
 
 The takeaway here should still be to keep functions small. At the moment we still have to avoid
 over-commenting (and even whitespace) inside functions. Also if you want the absolute fastest speed,
