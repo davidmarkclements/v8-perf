@@ -250,11 +250,14 @@ elements whereas one function may be in Crankshaft the other may be in Turbofan 
 inlining abilities (i.e. there has to be a jump between clusters of serially inlined functions).
 
 In 5.9 and upwards (Node 8.3+), any size added by irrelevant characters such as whitespace or comments
-has no bearing on the functions performance.  This is due to Turbofan, which is now using
-Abstract Syntax Tree node count, rather the character size: instead of
-of checking the text of the function, it consider the instructions on
-the functions, so that **whitespace, variable name character count, function signatures and comments
-will no longer factor in whether a function will inline.**
+has no bearing on the functions performance.
+This is because Turbofan uses the functions AST ([Abstract Syntax
+Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) node count to
+determine function size, rather than using character count as in
+Crankshaft. Instead of checking byte count of a function, it consider
+the actual instructions of the function, so that from V8 5.9 (Node 8.3+)
+**whitespace, variable name character count, function signatures and
+comments no longer factors in whether a function will inline.**
 
 Notably, again, we see that overall performance of functions decreases.
 
