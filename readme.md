@@ -1,5 +1,5 @@
 # A new V8 is coming, Node.js performance is changing.
-## How the performance characteristics of v8's Turbofan will affect the way we optimize
+## How the performance characteristics of V8's Turbofan will affect the way we optimize
 
 Authors: [David Mark Clements](https://twitter.com/davidmarkclem) and
 [Matteo Collina](https://twitter.com/matteocollina)
