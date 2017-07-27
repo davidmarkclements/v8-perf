@@ -270,7 +270,7 @@ inlining is a potential footgun; it's better to leave inlining up to the compile
 
 ### 32bit vs 64bit integers
 
-It's rather well known that JavaScript only has one number type: `Number`. (Maybe a sentence about the BigInt proposal should be included here?)
+It's rather well known that JavaScript only has one number type: `Number`.
 
 However, V8 is implemented in C++ so a choice has to be made
 on the underlying type for a numeric JavaScript value.
