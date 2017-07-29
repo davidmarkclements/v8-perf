@@ -38,6 +38,27 @@ suite.add('delete last property', function deleteProp () {
   JSON.stringify(obj)
 })
 
+suite.add('setting to undefined literal', function undefPropLit () {
+  var obj = { x: 2, y: 3 }
+  this.x = undefined
+
+  JSON.stringify(obj)
+})
+
+suite.add('delete property literal', function deletePropLit () {
+  var obj = { x: 2, y: 3 }
+  delete obj.x
+
+  JSON.stringify(obj)
+})
+
+suite.add('delete last property literal', function deletePropLit () {
+  var obj = { y: 3, x: 2 }
+  delete obj.x
+
+  JSON.stringify(obj)
+})
+
 suite.on('complete', require('./print'))
 
 suite.run()
