@@ -519,7 +519,7 @@ a performance reward is coming.
 
 The raw data for this article can be found at: https://docs.google.com/spreadsheets/d/1mDt4jDpN_Am7uckBbnxltjROI9hSu6crf9tOa2YnSog/edit?usp=sharing
 
-Some of the microbenchmarks were taken on a Macbook Pro 2016, 3.3 GHz Intel Core i7 with 16 GB 2133 MHz LPDDR3,
-others were taken on a MacBook Pro 2014, 3 GHz Intel Core i7 with 16 GB 1600 MHz DDR3. All the measurements
+Most of the microbenchmarks were taken on a Macbook Pro 2016, 3.3 GHz Intel Core i7 with 16 GB 2133 MHz LPDDR3,
+others (numbers, propery removal) were taken on a MacBook Pro 2014, 3 GHz Intel Core i7 with 16 GB 1600 MHz DDR3. All the measurements
 between the different Node.js versions were taken on the same machine.
 We took great care in assuring that no other programs were interfering.
