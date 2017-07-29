@@ -16,7 +16,12 @@ This piece is about the evolution of V8 and JS engines performance.
 
 A central piece of the V8 engine that allows it to execute JavaScript at high speed is
 the JIT (Just In Time) compiler. This is a dynamic compiler that can optimize code during
-runtime. When V8 was first built the JIT Compiler was dubbed: Crankshaft.
+runtime. When V8 was first built the JIT Compiler was dubbed FullCodegen.
+Then, the V8 team implemented Crankshaft, which included many
+performance optimizations that FullCodegen did not implement.
+
+_Edit: FullCodegen was the first optimizing compiler of V8, thanks [Yang Guo](https://twitter.com/hashseed)
+for reporting._
 
 As an outside observer and user of JavaScript since the 90's, it has seemed that
 fast and slow paths in JavaScript (whatever the engine may be) were often counter-intuitive, the
@@ -51,7 +56,9 @@ the experimental node-v8 repo at https://github.com/nodejs/node-v8. In other wor
 eventually be in some future version of Node.
 
 Let's take a look at our microbenchmarks and on the other side we'll talk about what this
-means for the future.
+means for the future. All the microbenchmarks are executed using
+[benchmark.js](https://www.npmjs.com/package/benchmark), and the values
+plotted are operation per second, so higher is better in every diagram.
 
 ### The try/catch problem
 
@@ -107,14 +114,21 @@ In this microbenchmark we compare two cases:
 
 * serializing an object after an object's property has been set to `undefined`
 * serializing an object after `delete` has been used to remove an object's property
+* serializing an object after `delete` has been used to remove an object's property that
+  was the last property added.
 
 **Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/property-removal.js>
 
 ![](graphs/property-removal-bar.png)
 
-In V8 6.1 (not yet used in any Node releases), operations on an object with a deleted property gets *extremeley* fast,
-faster, even, than setting to `undefined`. This is excellent news because now we can do
-the right thing *and* it's the fastest option.
+In V8 6.0 and 6.1 (not yet used in any Node releases), deleting the last property added to an object hit a fast path in Turbofan,
+and thus it is faster, even, than setting to `undefined`. This is excellent news, as it shows that the V8 team is working
+towards improving the performance of `delete`. Even in latest V8 releases, the `delete` operator might
+still result in massive slowdown, so we still recommend to avoid using it.
+
+_Edit: we incorrectly reported that you could start using delete in
+future Node.js releases, this was corrected in a later edition of the
+post._
 
 ### Leaking and arrayifying `arguments`
 
@@ -281,26 +295,37 @@ since in many cases a number is within the 0-65535 range. If a JavaScript (whole
 exceeds 65535 the JIT Compiler has to dynamically alter the underlying type for the number
 to 64bit - this may also have potential knock on effects with regards to other optimizations.
 
+In the case of integers (that is, when we specify a number in JS without a decimal), V8 assumes that
+all numbers are 32bit - until they aren’t. This seems like a fair choice, since in many cases a number
+is within the 2147483648-2147483647 range. If a JavaScript (whole) number exceeds 2147483647
+the JIT Compiler has to dynamically alter the underlying type for the number to a double
+(or: a double-precision floating point number) - this may also have potential knock on effects with
+regards to other optimizations.
+
 This benchmark looks at three cases:
 
 * a function handling only numbers in the 32bit range (*sum small*)
-* a function handling a combination of 32bit and 64bit numbers (*from small to big*)
-* a function handling only numbers that exceed 32bit capacity (*all big*)
+* a function handling a combination of 32bit and double numbers (*from small to big*)
+* a function handling only double numbers (*all big*)
 
 **Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/numbers.js>
 
 ![](graphs/numbers-line.png)
 
 We can see from the graph that whether it's Node 6 (V8 5.1) or Node 8 (V8 5.8)
-or even some future version of Node this observation holds true. Numbers (integers)
-greater than 65535 will cause functions to run between a half and two thirds of the speed.
+or even some future version of Node this observation holds true. Operations using Numbers
+(integers) greater than 2147483647 will cause functions to run between a half and two thirds of the speed.
 So, if you have long numeric ID's - put them in strings.
 
-It's also quite noticeable that numbers in the 32bit range have a speed increase between
-Node 6 (V8 5.1) and Node 8.1 and 8.2 (V8 5.8) but slow significantly in Node 8.3+ (V8 5.9+).
-Since the large numbers don't change speed at all, it's likely that this genuinely is a slow-down
-in (32bit) number handling rather than being related to the speed of function calls or
-for loops (which are used in the benchmark code).
+It's also quite noticeable that operations with numbers in the 32bit range have a speed increase
+between Node 6 (V8 5.1) and Node 8.1 and 8.2 (V8 5.8) but slow significantly in Node 8.3+ (V8 5.9+).
+However, operations over double numbers become faster in Node 8.3+ (V8 5.9+),
+It's likely that this genuinely is a slow-down in (32bit) number handling rather than being related
+to the speed of function calls or for loops (which are used in the benchmark code).
+
+_Edit: updated thanks to [Jakob Kummerow](http://disq.us/p/1kvomfk) and
+[Yang Guo](https://twitter.com/hashseed) and the V8 team, for both accuracy and precision
+of the results._
 
 ### Iterating over objects
 
@@ -324,7 +349,7 @@ We also benchmarks an additional three cases for V8 5.8, 5.9, 6.0 and 6.1
 supplied to `reduce` is a fat arrow function (*Object.values functional with arrow*)
 * looping over the array returned from `Object.values` with a `for` loop (*Object.values with for loop*)
 
-We don't bench these cases in V8 5.1 (Node 6) because it doesn't support the native EcmaScript 2015 `Object.values` method.
+We don't bench these cases in V8 5.1 (Node 6) because it doesn't support the native EcmaScript 2017 `Object.values` method.
 
 **Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/object-iteration.js>
 
@@ -381,6 +406,9 @@ for future friendly performant code is to always prefer object literals. This su
 since we recommend returning object literals from functions (rather than using classes
 or constructors) as a general best coding practice.
 
+_Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk]() that Turbofan
+can optimize away the object allocation in this specific microbenchmark.
+We are working on a updated version to take this in consideration._
 
 ### Polymorphic vs monomorphic functions
 
@@ -412,8 +440,12 @@ which compounds the point further. However it's worth noting that this based on 
 uses a sort of nightly-build V8 version - it may not end up being a concrete characteristic in V8 6.1.
 
 If we're writing code that needs to be optimal, that is a function that will be called many times over,
-then we should avoid using polymorphism. On the other hand, if it's only called once or twice, say an instantiating/setup function,
-then a polymorphic API is acceptable.
+then we should avoid using polymorphism. On the other hand, if it's only called once or twice, say an
+instantiating/setup function, then a polymorphic API is acceptable.
+
+_Edit: We have been informed by the V8 team that the results for this specific benchmark are not
+reliably reproducible using their internal executable, `d8`.
+The results and the subsequent analysis should therefore be taken as reference only, not at face value._
 
 ### The `debugger` keyword
 
@@ -441,8 +473,8 @@ In addition to our microbenchmarks we can take a look at the holistic effects of
 V8 versions by using benchmarks of most popular loggers for Node.js that Matteo and I
 put together while we were creating [Pino](http://getpino.io).
 
-The following bar chart represent the performance of the most popular
-loggers in Node.js 5.9 (Crankshaft):
+The following bar chart represent the performance (lower is better)
+of the most popular loggers in Node.js 6.11 (Crankshaft):
 
 ![](graphs/loggers-updated.png)
 
@@ -479,3 +511,7 @@ a performance reward is coming.
 
 The raw data for this article can be found at: https://docs.google.com/spreadsheets/d/1mDt4jDpN_Am7uckBbnxltjROI9hSu6crf9tOa2YnSog/edit?usp=sharing
 
+Some of the microbenchmarks were taken on a Macbook Pro 2016, 3.3 GHz Intel Core i7 with 16 GB 2133 MHz LPDDR3,
+others were taken on a MacBook Pro 2014, 3 GHz Intel Core i7 with 16 GB 1600 MHz DDR3. All the measurements
+between the different Node.js versions were taken on the same machine.
+We took great care in assuring that no other programs were interfering.

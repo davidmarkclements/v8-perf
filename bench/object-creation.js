@@ -30,7 +30,7 @@ suite.add('constructor', function allNums () {
 
 var literal = { x: 1 }
 suite.add('create', function allNums () {
-  var obj = Object.create(literal)
+  obj = Object.create(literal)
 })
 
 suite.on('cycle', () => runs = 0)
