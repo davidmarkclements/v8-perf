@@ -114,21 +114,25 @@ In this microbenchmark we compare two cases:
 
 * serializing an object after an object's property has been set to `undefined`
 * serializing an object after `delete` has been used to remove an object's property
-* serializing an object after `delete` has been used to remove an object's property that
   was the last property added.
+* serializing an object after `delete` has been used to remove the object's
+  most recently added property.
 
 **Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/property-removal.js>
 
 ![](graphs/property-removal-bar.png)
 
-In V8 6.0 and 6.1 (not yet used in any Node releases), deleting the last property added to an object hit a fast path in Turbofan,
+In V8 6.0 and 6.1 (not yet used in any Node releases), deleting the last property added to an object hits a fast path in Turbofan,
 and thus it is faster, even, than setting to `undefined`. This is excellent news, as it shows that the V8 team is working
-towards improving the performance of `delete`. Even in latest V8 releases, the `delete` operator might
-still result in massive slowdown, so we still recommend to avoid using it.
+towards improving the performance of `delete`.
+However, the `delete` operator will still result in a significant performance hit on property access if a property
+*other than the most recently added property* is deleted from the object. So overall we have to continue to recommend against using `delete`.
 
-_Edit: we incorrectly reported that you could start using delete in
-future Node.js releases, this was corrected in a later edition of the
-post._
+_Edit: in a previous version of the post we concluded that `delete` could and should be used 
+in future Node.js releases. However [Jakob
+Kummerow](http://disq.us/p/1kvomfk) let us know that our benchmarks only
+triggered the last property accessed case. Thanks [Jakob
+Kummerow](http://disq.us/p/1kvomfk)!_
 
 ### Leaking and arrayifying `arguments`
 
@@ -408,7 +412,7 @@ or constructors) as a general best coding practice.
 
 _Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk]() that Turbofan
 can optimize away the object allocation in this specific microbenchmark.
-We are working on a updated version to take this in consideration._
+We'll be updating again soon to take this into account._
 
 ### Polymorphic vs monomorphic functions
 
@@ -444,8 +448,12 @@ then we should avoid using polymorphism. On the other hand, if it's only called 
 instantiating/setup function, then a polymorphic API is acceptable.
 
 _Edit: We have been informed by the V8 team that the results for this specific benchmark are not
-reliably reproducible using their internal executable, `d8`.
-The results and the subsequent analysis should therefore be taken as reference only, not at face value._
+reliably reproducible using their internal executable, `d8`. However
+this benchmark is reproducible on Node. So the results and subsequent
+analysis should be taken with the view that this may change in future
+Node updates (based on how Node is integrating with V8). Further
+analysis is required.
+Thanks [Jakob Kummerow](http://disq.us/p/1kvomfk) for pointing this out._
 
 ### The `debugger` keyword
 
