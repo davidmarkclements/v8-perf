@@ -114,7 +114,7 @@ In this microbenchmark we compare three cases:
 
 * serializing an object after an object's property has been set to `undefined`
 * serializing an object after `delete` has been used to remove an object's property
-  was the last property added.
+  which was not the last property added.
 * serializing an object after `delete` has been used to remove the object's
   most recently added property.
 
