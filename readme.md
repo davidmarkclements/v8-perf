@@ -476,7 +476,7 @@ V8 versions by using benchmarks of most popular loggers for Node.js that Matteo 
 put together while we were creating [Pino](http://getpino.io).
 
 The following bar chart represent the time taken to log 10 thousands
-line (lower is better) of the most popular loggers in Node.js 6.11 (Crankshaft):
+lines (lower is better) of the most popular loggers in Node.js 6.11 (Crankshaft):
 
 ![](graphs/loggers-updated.png)
 
