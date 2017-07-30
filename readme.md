@@ -29,7 +29,7 @@ reasons for apparently slow JavaScript code were often difficult to fathom.
 
 In recent years [Matteo Collina](https://twitter.com/matteocollina) and [I](https://twitter.com/davidmarkclem)
 have focused on finding out how to write performant Node.js code. Of course this means
-knowing which approaches are fast and which approaches are slow when our code executed by
+knowing which approaches are fast and which approaches are slow when our code is executed by
 the V8 JavaScript engine.
 
 Now it's time for us to challenge all our assumptions about performance, because the V8 team has
@@ -110,7 +110,7 @@ does not include `undefined` values in its output (`undefined` isn't a valid val
 
 Now, let's see if the newer Turbofan implementation addresses the `delete` problem.
 
-In this microbenchmark we compare two cases:
+In this microbenchmark we compare three cases:
 
 * serializing an object after an object's property has been set to `undefined`
 * serializing an object after `delete` has been used to remove an object's property
@@ -282,7 +282,7 @@ Notably, again, we see that overall performance of functions decreases.
 The takeaway here should still be to keep functions small. At the moment we still have to avoid
 over-commenting (and even whitespace) inside functions. Also if you want the absolute fastest speed,
 manually inlining (removing the call) is consistently the fastest approach. Of course this has to be balanced
-against the fact that after a certain size (of actually executable code) a function won't be inlined, so copy-pasting
+against the fact that after a certain size (of actual executable code) a function won't be inlined, so copy-pasting
 code from other functions into your function could cause performance problem. In other words manual
 inlining is a potential footgun; it's better to leave inlining up to the compiler in most cases.
 
@@ -293,17 +293,11 @@ It's rather well known that JavaScript only has one number type: `Number`.
 However, V8 is implemented in C++ so a choice has to be made
 on the underlying type for a numeric JavaScript value.
 
-In the case of integers (that is, when we specify a number in JS without a decimal),
-V8 assumes that all numbers are 32bit - until they aren't. This seems like a fair choice,
-since in many cases a number is within the 0-65535 range. If a JavaScript (whole) number
-exceeds 65535 the JIT Compiler has to dynamically alter the underlying type for the number
-to 64bit - this may also have potential knock on effects with regards to other optimizations.
-
 In the case of integers (that is, when we specify a number in JS without a decimal), V8 assumes that
 all numbers are 32bit - until they aren’t. This seems like a fair choice, since in many cases a number
 is within the 2147483648-2147483647 range. If a JavaScript (whole) number exceeds 2147483647
 the JIT Compiler has to dynamically alter the underlying type for the number to a double
-(or: a double-precision floating point number) - this may also have potential knock on effects with
+(a double-precision floating point number) - this may also have potential knock on effects with
 regards to other optimizations.
 
 This benchmark looks at three cases:
@@ -481,8 +475,8 @@ In addition to our microbenchmarks we can take a look at the holistic effects of
 V8 versions by using benchmarks of most popular loggers for Node.js that Matteo and I
 put together while we were creating [Pino](http://getpino.io).
 
-The following bar chart represent the performance (lower is better)
-of the most popular loggers in Node.js 6.11 (Crankshaft):
+The following bar chart represent the time taken to log 10 thousands
+line (lower is better) of the most popular loggers in Node.js 6.11 (Crankshaft):
 
 ![](graphs/loggers-updated.png)
 
