@@ -323,9 +323,9 @@ So, if you have long numeric ID's - put them in strings.
 
 It's also quite noticeable that operations with numbers in the 32bit range have a speed increase
 between Node 6 (V8 5.1) and Node 8.1 and 8.2 (V8 5.8) but slow significantly in Node 8.3+ (V8 5.9+).
-However, operations over double numbers become faster in Node 8.3+ (V8 5.9+),
+However, operations over double numbers become faster in Node 8.3+ (V8 5.9+).
 It's likely that this genuinely is a slow-down in (32bit) number handling rather than being related
-to the speed of function calls or for loops (which are used in the benchmark code).
+to the speed of function calls or `for` loops (which are used in the benchmark code).
 
 _Edit: updated thanks to [Jakob Kummerow](http://disq.us/p/1kvomfk) and
 [Yang Guo](https://twitter.com/hashseed) and the V8 team, for both accuracy and precision
