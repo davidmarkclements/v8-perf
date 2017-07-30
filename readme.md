@@ -110,7 +110,7 @@ does not include `undefined` values in its output (`undefined` isn't a valid val
 
 Now, let's see if the newer Turbofan implementation addresses the `delete` problem.
 
-In this microbenchmark we compare two cases:
+In this microbenchmark we compare three cases:
 
 * serializing an object after an object's property has been set to `undefined`
 * serializing an object after `delete` has been used to remove an object's property
