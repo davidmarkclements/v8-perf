@@ -419,35 +419,27 @@ Let's see how monomorphic and polymorphic cases do in our benchmarks.
 
 Here we investigate five cases:
 
-* a function is passed both object literals and strings (*polymorphic with literal*)
-* a function is passed both constructor instances and strings (*polymorphic with constructor*)
-* a function is only passed strings (*monomorphic string*)
-* a function is only passed object literals (*monomorphic obj literal*)
-* a function is only passed constructor instances (*monomorphic obj with constructor*)
+* a function where we process objects with different properties (`polymorphic`)
+* a function where we process objects with the same properties (`monomorphic`)
 
 **Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/polymorphic.js>
 
 
-![](graphs/input-type-bar.png)
+![](graphs/polymorphic-bar.png)
 
 The data visualized in our graph shows conclusively that monomorphic functions outperform polymorphic functions
-across all V8 versions tested.
-
-There's a much wider performance gap between monomorphic and polymorphic functions in V8 6.1 (future Node),
-which compounds the point further. However it's worth noting that this based on the node-v8 branch which
-uses a sort of nightly-build V8 version - it may not end up being a concrete characteristic in V8 6.1.
+across all V8 versions tested. However, the performance of the polymorphic function improves from V8 5.9+ (at least Node 8.3).
+Polymorphic functions are very common through the Node.js codebase, and
+they provide much flexibility through the APIs, seeing them being
+optimized might imply a better Node.js performance for some complex
+applications.
 
 If we're writing code that needs to be optimal, that is a function that will be called many times over,
 then we should avoid using polymorphism. On the other hand, if it's only called once or twice, say an
 instantiating/setup function, then a polymorphic API is acceptable.
 
-_Edit: We have been informed by the V8 team that the results for this specific benchmark are not
-reliably reproducible using their internal executable, `d8`. However
-this benchmark is reproducible on Node. So the results and subsequent
-analysis should be taken with the view that this may change in future
-Node updates (based on how Node is integrating with V8). Further
-analysis is required.
-Thanks [Jakob Kummerow](http://disq.us/p/1kvomfk) for pointing this out._
+_Edit:  Thanks [Jakob Kummerow](https://github.com/davidmarkclements/v8-perf/issues/9#issuecomment-318796286)
+for providing a more reliable version of this benchmark._
 
 ### The `debugger` keyword
 
@@ -514,6 +506,6 @@ a performance reward is coming.
 The raw data for this article can be found at: https://docs.google.com/spreadsheets/d/1mDt4jDpN_Am7uckBbnxltjROI9hSu6crf9tOa2YnSog/edit?usp=sharing
 
 Most of the microbenchmarks were taken on a Macbook Pro 2016, 3.3 GHz Intel Core i7 with 16 GB 2133 MHz LPDDR3,
-others (numbers, property removal) were taken on a MacBook Pro 2014, 3 GHz Intel Core i7 with 16 GB 1600 MHz DDR3. All the measurements
+others (numbers, property removal, polymorphic) were taken on a MacBook Pro 2014, 3 GHz Intel Core i7 with 16 GB 1600 MHz DDR3. All the measurements
 between the different Node.js versions were taken on the same machine.
 We took great care in assuring that no other programs were interfering.
