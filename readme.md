@@ -410,7 +410,7 @@ for future friendly performant code is to always prefer object literals. This su
 since we recommend returning object literals from functions (rather than using classes
 or constructors) as a general best coding practice.
 
-_Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk]() that Turbofan
+_Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk](http://disq.us/p/1kvomfk) that Turbofan
 can optimize away the object allocation in this specific microbenchmark.
 We'll be updating again soon to take this into account._
 
