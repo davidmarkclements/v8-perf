@@ -14,28 +14,26 @@ function MyCtor (x) {
   this.x = x
 }
 
-var obj
-
 suite.add('literal', function literalObj () {
-  obj = { x: 1 }
+  var obj = { x: 1 }
 })
 
 suite.add('class', function classObj () {
-  obj = new MyClass(1)
+  var obj = new MyClass(1)
 })
 
 suite.add('constructor', function constructorObj () {
-  obj = new MyCtor(1)
+  var obj = new MyCtor(1)
 })
 
 var propertiesObject = { x: { value: 1, enumerable: true, writable: true, configurable: true} }
 suite.add('create (propertiesObject)', function createObjWithPropertiesObject () {
-  obj = Object.create(Object.prototype, propertiesObject)
+  var obj = Object.create(Object.prototype, propertiesObject)
 })
 
 
 suite.add('create (prop assign)', function createObjAndAssignProp () {
-  obj = Object.create(Object.prototype)
+  var obj = Object.create(Object.prototype)
   obj.x = 1
 })
 
