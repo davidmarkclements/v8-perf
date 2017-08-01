@@ -19,7 +19,7 @@ function MyClassLast (x, y) {
 
 suite.add('setting to undefined', function undefProp () {
   var obj = new MyClass(2, 3)
-  this.x = undefined
+  obj.x = undefined
 
   JSON.stringify(obj)
 })
@@ -40,7 +40,7 @@ suite.add('delete last property', function deleteProp () {
 
 suite.add('setting to undefined literal', function undefPropLit () {
   var obj = { x: 2, y: 3 }
-  this.x = undefined
+  obj.x = undefined
 
   JSON.stringify(obj)
 })

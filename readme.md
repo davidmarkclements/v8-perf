@@ -122,7 +122,7 @@ In this microbenchmark we compare three cases:
 
 ![](graphs/property-removal-bar.png)
 
-In V8 6.0 and 6.1 (not yet used in any Node releases), deleting the last property added to an object hits a fast path in Turbofan,
+In V8 6.0 and 6.1 (not yet used in any Node releases), deleting the last property added to an object hits a fast path in V8,
 and thus it is faster, even, than setting to `undefined`. This is excellent news, as it shows that the V8 team is working
 towards improving the performance of `delete`.
 However, the `delete` operator will still result in a significant performance hit on property access if a property
