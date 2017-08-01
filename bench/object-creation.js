@@ -16,6 +16,8 @@ function MyCtor (x) {
 
 var obj
 
+suite.add('noop', function noop () {})
+
 suite.add('literal', function literalObj () {
   obj = { x: 1 }
 })

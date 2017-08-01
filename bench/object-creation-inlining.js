@@ -14,29 +14,32 @@ function MyCtor (x) {
   this.x = x
 }
 
-suite.add('literal', function literalObj () {
+var res = 0
+
+function doSomething (obj) {
+  res = obj.x
+}
+
+suite.add('literal', function base () {
   var obj = { x: 1 }
+  doSomething(obj)
 })
 
-suite.add('class', function classObj () {
+suite.add('class', function allNums () {
   var obj = new MyClass(1)
+  doSomething(obj)
 })
 
-suite.add('constructor', function constructorObj () {
+suite.add('constructor', function allNums () {
   var obj = new MyCtor(1)
+  doSomething(obj)
 })
 
-var propertiesObject = { x: { value: 1, enumerable: true, writable: true, configurable: true} }
-suite.add('create (propertiesObject)', function createObjWithPropertiesObject () {
-  var obj = Object.create(Object.prototype, propertiesObject)
-})
-
-
-suite.add('create (prop assign)', function createObjAndAssignProp () {
+suite.add('create', function allNums () {
   var obj = Object.create(Object.prototype)
   obj.x = 1
+  doSomething(obj)
 })
-
 
 suite.on('cycle', () => runs = 0)
 

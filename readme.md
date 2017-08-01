@@ -387,26 +387,46 @@ We're going to look at three cases:
 
 ![](graphs/object-creation-bar.png)
 
-In Node 6 (V8 5.1) all approaches are pretty even.
+We can see that creating new object had a performance regression in Node
+8.2 (V8 5.8), and it will recover in future Node.js versions with V8 6.0 (we hope Node 8.3)
+and 6.1.
 
-In Node 8.0-8.2 (V8 5.8) instances created from EcmaScript 2015 classes are less than half
-the speed of using an object literal or a constructor. So.. you know, watch out for that.
-
-In V8 5.9 performance evens out again.
-
-Then in V8 6.0 (hopefully Node 8.3, or otherwise 8.4) and 6.1 (which isn't currently in any Node release) object creation
-speed goes *insane*!! Over 500 million op/s! That's incredible.
-
-![](https://media.giphy.com/media/2mxA3QHH4aHFm/giphy.gif)
-
-We can see that objects created by constructors are slightly slower. So our best bet
-for future friendly performant code is to always prefer object literals. This suits us fine,
-since we recommend returning object literals from functions (rather than using classes
-or constructors) as a general best coding practice.
+In Node 6.11 creating object literals was faster, while in future
+Node.js releases the performance of creating object will be identical in
+all version of Node.js.
 
 _Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk](http://disq.us/p/1kvomfk) that Turbofan
 can optimize away the object allocation in this specific microbenchmark.
-We'll be updating again soon to take this into account._
+The creatin object benchmark has been split into creating object and
+creating hardocoded objects._
+
+### Creating hardcoded objects
+
+An extremely common pattern in JS is to create an "option object" to
+specify some options to a function call, e.g.:
+
+```js
+const net = require('net');
+const opts = { port: 8124 }
+const client = net.createConnection(opts, () => {
+  //'connect' listener
+  console.log('connected to server!');
+  client.write('world!\r\n');
+});
+```
+
+Let's see the performance of hardcoded objects:
+
+![](graphs/object-creation-inlining-bar.png)
+
+Then in V8 6.0 (hopefully Node 8.3, or otherwise 8.4) and 6.1 (Node 9) hardcoded object creation
+speed goes *insane*!! Over 500 million op/s!
+If we always manipulate an object that is fully hardcoded, recent V8 can
+optimize it away, avoiding completely the object allocation itself!
+
+That's incredible.
+
+![](https://media.giphy.com/media/2mxA3QHH4aHFm/giphy.gif)
 
 ### Polymorphic vs monomorphic functions
 
