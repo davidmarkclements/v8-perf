@@ -286,7 +286,7 @@ against the fact that after a certain size (of actual executable code) a functio
 code from other functions into your function could cause performance problem. In other words manual
 inlining is a potential footgun; it's better to leave inlining up to the compiler in most cases.
 
-### 32bit vs 64bit integers
+### 32-bit integers vs integers stored in doubles
 
 It's rather well known that JavaScript only has one number type: `Number`.
 
@@ -294,16 +294,16 @@ However, V8 is implemented in C++ so a choice has to be made
 on the underlying type for a numeric JavaScript value.
 
 In the case of integers (that is, when we specify a number in JS without a decimal), V8 assumes that
-all numbers are 32bit - until they aren’t. This seems like a fair choice, since in many cases a number
-is within the 2147483648-2147483647 range. If a JavaScript (whole) number exceeds 2147483647
+all numbers fit into 32 bits - until they don’t. This seems like a fair choice, since in many cases a number
+is within the -2147483648 - 2147483647 range. If a JavaScript (whole) number exceeds 2147483647
 the JIT Compiler has to dynamically alter the underlying type for the number to a double
 (a double-precision floating point number) - this may also have potential knock on effects with
 regards to other optimizations.
 
 This benchmark looks at three cases:
 
-* a function handling only numbers in the 32bit range (*sum small*)
-* a function handling a combination of 32bit and double numbers (*from small to big*)
+* a function handling only numbers in the 32-bit range (*sum small*)
+* a function handling a combination of 32-bit and double numbers (*from small to big*)
 * a function handling only double numbers (*all big*)
 
 **Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/numbers.js>
@@ -315,10 +315,10 @@ or even some future version of Node this observation holds true. Operations usin
 (integers) greater than 2147483647 will cause functions to run between a half and two thirds of the speed.
 So, if you have long numeric ID's - put them in strings.
 
-It's also quite noticeable that operations with numbers in the 32bit range have a speed increase
+It's also quite noticeable that operations with numbers in the 32-bit range have a speed increase
 between Node 6 (V8 5.1) and Node 8.1 and 8.2 (V8 5.8) but slow significantly in Node 8.3+ (V8 5.9+).
 However, operations over double numbers become faster in Node 8.3+ (V8 5.9+).
-It's likely that this genuinely is a slow-down in (32bit) number handling rather than being related
+It's likely that this genuinely is a slow-down in (32-bit) number handling rather than being related
 to the speed of function calls or `for` loops (which are used in the benchmark code).
 
 _Edit: updated thanks to [Jakob Kummerow](http://disq.us/p/1kvomfk) and
