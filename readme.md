@@ -411,9 +411,9 @@ We'll be updating again soon to take this into account._
 ### Polymorphic vs monomorphic functions
 
 When we always input the same type of argument into a function (say, we always pass a string), we are using that function
-in a monomorphic way. Some functions are written to be polymorphic - which means that the same parameter can be handled
-as different hidden classes - so maybe it can handle a string, or an array or an object with a specific hidden class and
-handle it accordingly. This can make for nice interfaces in some circumstances but has a negative impact on performance.
+in a monomorphic way. Some functions are written to be polymorphic - which means that the function will process object with
+different types, or as they are more frequently called "shapes" or "hidden classes". Processing objects with different shapes
+through the same code can make for nice interfaces in some circumstances but has a negative impact on performance.
 
 Let's see how monomorphic and polymorphic cases do in our benchmarks.
 
@@ -435,7 +435,8 @@ optimized might imply a better Node.js performance for some complex
 applications.
 
 If we're writing code that needs to be optimal, that is a function that will be called many times over,
-then we should avoid using polymorphism. On the other hand, if it's only called once or twice, say an
+then we should commit to call functions with the parameters with the same "shape".
+On the other hand, if a function is only called once or twice, say an
 instantiating/setup function, then a polymorphic API is acceptable.
 
 _Edit:  Thanks [Jakob Kummerow](https://github.com/davidmarkclements/v8-perf/issues/9#issuecomment-318796286)
