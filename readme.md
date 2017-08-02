@@ -397,7 +397,7 @@ all version of Node.js.
 
 _Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk](http://disq.us/p/1kvomfk) that Turbofan
 can optimize away the object allocation in this specific microbenchmark.
-The creatin object benchmark has been split into creating object and
+The creating object benchmark has been split into creating object and
 creating hardocoded objects._
 
 ### Creating hardcoded objects
