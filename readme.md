@@ -419,10 +419,9 @@ Let's see the performance of hardcoded objects:
 
 ![](graphs/object-creation-inlining-bar.png)
 
-Then in V8 6.0 (hopefully Node 8.3, or otherwise 8.4) and 6.1 (Node 9) hardcoded object creation
-speed goes *insane*!! Over 500 million op/s!
-If we always manipulate an object that is fully hardcoded, recent V8 can
-optimize it away, avoiding completely the object allocation itself!
+Then in V8 6.0 (hopefully Node 8.3, or otherwise 8.4) and 6.1 (Node 9) V8 can optimize the Object creation away,
+if the object is fully hardcoded, avoiding completely the object allocation itself! The benchmarks report fantastic results,
+over 5000 million ops!
 
 That's incredible.
 
