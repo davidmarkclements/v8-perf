@@ -373,9 +373,9 @@ So there may be some more work to do when it comes to iterating over objects.
 Also, for those who've used `for`-`in` for its performance benefits it's going to be a painful
 moment when we lose a large chunk of speed with no alternative approach available.
 
-### Creating objects
+### Object allocation
 
-We create objects *all the time* so this is a great area to measure.
+We allocate objects *all the time* so this is a great area to measure.
 
 We're going to look at three cases:
 
@@ -387,26 +387,52 @@ We're going to look at three cases:
 
 ![](graphs/object-creation-bar.png)
 
-In Node 6 (V8 5.1) all approaches are pretty even.
-
-In Node 8.0-8.2 (V8 5.8) instances created from EcmaScript 2015 classes are less than half
-the speed of using an object literal or a constructor. So.. you know, watch out for that.
-
-In V8 5.9 performance evens out again.
-
-Then in V8 6.0 (hopefully Node 8.3, or otherwise 8.4) and 6.1 (which isn't currently in any Node release) object creation
-speed goes *insane*!! Over 500 million op/s! That's incredible.
-
-![](https://media.giphy.com/media/2mxA3QHH4aHFm/giphy.gif)
-
-We can see that objects created by constructors are slightly slower. So our best bet
-for future friendly performant code is to always prefer object literals. This suits us fine,
-since we recommend returning object literals from functions (rather than using classes
-or constructors) as a general best coding practice.
+Object allocation have the same cost in all the test V8 versions, apart
+from classes in Node 8.2 (V8 5.8), which are slower than the rest. This
+is due to the mixed Crankshaft/Turbofan nature of V8 5.8, and it will be
+resolved in Node 8.3 with V8 6.0.
 
 _Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk](http://disq.us/p/1kvomfk) that Turbofan
-can optimize away the object allocation in this specific microbenchmark.
-We'll be updating again soon to take this into account._
+can optimize away the object allocation in this specific microbenchmark,
+leading to incorrect results.
+The creating object benchmark has been split into creating objects and
+creating objects that does not "escape"._
+
+#### Creating objects that does not "escape"
+
+An extremely common pattern in JS is to create an "option object" to
+specify some options to a function call, e.g.:
+
+```js
+const net = require('net');
+const opts = { port: 8124 }
+const client = net.createConnection(opts, () => {
+  //'connect' listener
+  console.log('connected to server!');
+  client.write('world!\r\n');
+});
+```
+
+Moreover these objects can be used just to call another function with
+custom data, and then completely discarded. When an object exits the
+context (call stack) that has defined it, we say it "escaped". This benchmark is
+about objects that do not escape, and are used within a single call
+stack and then discarded.
+
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/object-creation-inlining.js>
+
+Let's see the performance of hardcoded objects:
+
+![](graphs/hardcoded-object-creation-bar.png)
+
+Then in V8 6.0 (Node 8.3) and 6.1 (Node 9) V8 can optimize the Object creation away
+if the object does not escape, avoiding completely the cost of object allocation itself!
+The benchmarks report fantastic results, over 500 million ops, mainly because it is actually
+doing nothing.
+
+That's incredible.
+
+![](https://media.giphy.com/media/2mxA3QHH4aHFm/giphy.gif)
 
 ### Polymorphic vs monomorphic code
 
