@@ -408,7 +408,7 @@ _Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk](http://disq.us/p/1kvom
 can optimize away the object allocation in this specific microbenchmark.
 We'll be updating again soon to take this into account._
 
-### Polymorphic vs monomorphic functions
+### Polymorphic vs monomorphic code
 
 When we always input the same type of argument into a function (say, we always pass a string), we are using that function
 in a monomorphic way. Some functions are written to be polymorphic - which means that the function will process object with
