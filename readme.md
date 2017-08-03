@@ -373,9 +373,9 @@ So there may be some more work to do when it comes to iterating over objects.
 Also, for those who've used `for`-`in` for its performance benefits it's going to be a painful
 moment when we lose a large chunk of speed with no alternative approach available.
 
-### Creating objects
+### Object allocation
 
-We create objects *all the time* so this is a great area to measure.
+We allocate objects *all the time* so this is a great area to measure.
 
 We're going to look at three cases:
 
@@ -387,20 +387,18 @@ We're going to look at three cases:
 
 ![](graphs/object-creation-bar.png)
 
-We can see that creating new object had a performance regression in Node
-8.2 (V8 5.8), and it will recover in future Node.js versions with V8 6.0 (we hope Node 8.3)
-and 6.1.
-
-In Node 6.11 creating object literals was faster, while in future
-Node.js releases the performance of creating object will be identical in
-all version of Node.js.
+Object allocation have the same cost in all the test V8 versions, apart
+from classes in Node 8.2 (V8 5.8), which are slower than the rest. This
+is due to the mixed Crankshaft/Turbofan nature of V8 5.8, and it will be
+resolved in Node 8.3 with V8 6.0.
 
 _Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk](http://disq.us/p/1kvomfk) that Turbofan
-can optimize away the object allocation in this specific microbenchmark.
-The creating object benchmark has been split into creating object and
-creating hardocoded objects._
+can optimize away the object allocation in this specific microbenchmark,
+leading to incorrect results.
+The creating object benchmark has been split into creating objects and
+creating objects that does not "escape"._
 
-### Creating hardcoded objects
+#### Creating objects that does not "escape"
 
 An extremely common pattern in JS is to create an "option object" to
 specify some options to a function call, e.g.:
@@ -415,13 +413,22 @@ const client = net.createConnection(opts, () => {
 });
 ```
 
+Moreover these objects can be used just to call another function with
+custom data, and then completely discarded. When an object exits the
+context (call stack) that has defined it, we say it "escaped". This benchmark is
+about objects that do not escape, and are used within a single call
+stack and then discarded.
+
+**Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/object-creation-inlining.js>
+
 Let's see the performance of hardcoded objects:
 
 ![](graphs/hardcoded-object-creation-bar.png)
 
-Then in V8 6.0 (hopefully Node 8.3, or otherwise 8.4) and 6.1 (Node 9) V8 can optimize the Object creation away,
-if the object is fully hardcoded, avoiding completely the object allocation itself! The benchmarks report fantastic results,
-over 5000 million ops!
+Then in V8 6.0 (Node 8.3) and 6.1 (Node 9) V8 can optimize the Object creation away
+if the object does not escape, avoiding completely the cost of object allocation itself!
+The benchmarks report fantastic results, over 500 million ops, mainly because it is actually
+doing nothing.
 
 That's incredible.
 

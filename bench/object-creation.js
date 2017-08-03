@@ -4,6 +4,11 @@ var benchmark = require('benchmark')
 var suite = new benchmark.Suite()
 var runs = 0
 
+// the for loop is needed otherwise V8
+// can optimize the allocation of the object
+// away
+var max = 10000
+
 class MyClass {
   constructor (x) {
     this.x = x
@@ -14,33 +19,33 @@ function MyCtor (x) {
   this.x = x
 }
 
-var obj
-
 suite.add('noop', function noop () {})
 
 suite.add('literal', function literalObj () {
-  obj = { x: 1 }
+  var obj = null
+
+  for (var i = 0; i < max; i++) {
+    obj = { x: 1 }
+  }
+
+  return obj
 })
 
 suite.add('class', function classObj () {
-  obj = new MyClass(1)
+  var obj = null
+  for (var i = 0; i < max; i++) {
+    obj = new MyClass(1)
+  }
+  return obj
 })
 
 suite.add('constructor', function constructorObj () {
-  obj = new MyCtor(1)
+  var obj = null
+  for (var i = 0; i < max; i++) {
+    obj = new MyCtor(1)
+  }
+  return obj
 })
-
-var propertiesObject = { x: { value: 1, enumerable: true, writable: true, configurable: true} }
-suite.add('create (propertiesObject)', function createObjWithPropertiesObject () {
-  obj = Object.create(Object.prototype, propertiesObject)
-})
-
-
-suite.add('create (prop assign)', function createObjAndAssignProp () {
-  obj = Object.create(Object.prototype)
-  obj.x = 1
-})
-
 
 suite.on('cycle', () => runs = 0)
 
