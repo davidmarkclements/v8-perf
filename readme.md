@@ -50,10 +50,10 @@ We'll be looking at the performance of these microbenchmarks on V8 versions 5.1,
 To put each of these versions into context: V8 5.1 is the engine used by Node 6 and uses the Crankshaft
 JIT Compiler, V8 5.8 is used in Node 8.0 to 8.2 and uses a mixture of Crankshaft *and* Turbofan.
 
-Currently either 5.9 or 6.0 engine is due to be in Node 8.3 (or possibly Node 8.4) and
+Currently 6.0 engine is due to be in Node 8.3 and
 V8 version 6.1 is the latest version of V8 (at the time of writing) which is integrated with Node on
 the experimental node-v8 repo at https://github.com/nodejs/node-v8. In other words, V8 version 6.1 will
-eventually be in some future version of Node.
+eventually be in some future version of Node, likely Node.js 9.
 
 Let's take a look at our microbenchmarks and on the other side we'll talk about what this
 means for the future. All the microbenchmarks are executed using
