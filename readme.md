@@ -403,8 +403,8 @@ leading to incorrect results so this article has been edited accordingly._
 
 While collating our results for this article, we came across a really
 neat optimization that Turbofan brings to a certain category of
-object allocation. Originally we mistook this for all object allocation,
-thanks to input from the V8 team we've come to understand the circumstancess
+object allocation. Originally we mistook this for all object allocation, but
+thanks to input from the V8 team we've come to understand the circumstances
 which this optimization relates to.
 
 In the previous **Object allocation** benchmarks we assign a variable, set it
@@ -440,7 +440,7 @@ takes for this optimization to be applied by Turbofan are as follows.
 First, do not alter the content of the variable. That is don't reassign a variable with a new object
 once that variable has already been assigned.
 
-Secondly, The object must not survive the current function. That means, there should be
+Secondly, the object must not outlive the function it was created in. That means, there should be
 no reference to that object after every function from that point in the stack has completed. The object
 *can* be passed to other functions, but if we add that object to a `this` context, or assign it
 to an outer scoped variable, or use it as the return value from the current function, or add it to
@@ -449,7 +449,7 @@ another object that lives on after the stack has finished the optimization canno
 The ramifications for this could be pretty cool.
 
 A common JavaScript pattern, particularly in Node, is to create an "options object" which specifies
-some options to a function call, for instance:
+some options to a function call. For instance:
 
 ```js
 const net = require('net')
@@ -462,7 +462,7 @@ const client = net.createConnection(opts, () => {
 ```
 
 In these situations, the options are generally just read and then discarded
-(of if not, in a lot of these scenarios, they *could* just be read and discarded).
+(or if not, in a lot of these scenarios, they *could* just be read and discarded).
 
 We love this optimization, we think it's incredible.
 
@@ -511,7 +511,7 @@ The data visualized in our graph shows conclusively that monomorphic functions o
 Polymorphic functions are very common through the Node.js codebase, and
 they provide a great deal flexibility through the APIs. Thanks to this improvement 
 around polymorphic interaction, we may see a degree of improved
-performance in more complex Node.js applications.  
+performance in more complex Node.js applications.
 
 If we're writing code that needs to be optimal, that is a function that will be called many times over,
 then we should commit to call functions with the parameters with the same "shape".
