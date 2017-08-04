@@ -7,6 +7,9 @@ Authors: [David Mark Clements](https://twitter.com/davidmarkclem) and
 Reviewers: [Franziska Hinkelmann](https://twitter.com/fhinkel) and
 [Benedikt Meurer](https://twitter.com/bmeurer) from the V8 team.
 
+**Update: Node.js 8.3.0 will [ship V8 6.0 with Turbofan](https://github.com/nodejs/node/pull/14594). Validate your
+application with `NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/rc nvm i 8.3.0-rc.0`**
+
 Since it's inception Node.js has depended on the V8 JavaScript engine to provide
 code execution in the language we all know and love. The V8 JavaScript engine is
 a JavaScript VM written by Google for the Chrome browser. From the beginning,
@@ -379,9 +382,9 @@ We allocate objects *all the time* so this is a great area to measure.
 
 We're going to look at three cases:
 
-* creating objects using object literals (*literal*)
-* creating objects from an EcmaScript 2015 Class (*class*)
-* creating objects from a constructor function (*constructor*)
+* allocating objects using object literals (*literal*)
+* allocating objects from an EcmaScript 2015 Class (*class*)
+* allocating objects from a constructor function (*constructor*)
 
 **Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/object-creation.js>
 
@@ -394,71 +397,121 @@ resolved in Node 8.3 with V8 6.0.
 
 _Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk](http://disq.us/p/1kvomfk) that Turbofan
 can optimize away the object allocation in this specific microbenchmark,
-leading to incorrect results.
-The creating object benchmark has been split into creating objects and
-creating objects that does not "escape"._
+leading to incorrect results so this article has been edited accordingly._
 
-#### Creating objects that does not "escape"
+#### Object allocation elimination
 
-An extremely common pattern in JS is to create an "option object" to
-specify some options to a function call, e.g.:
+While collating our results for this article, we came across a really
+neat optimization that Turbofan brings to a certain category of
+object allocation. Originally we mistook this for all object allocation, but
+thanks to input from the V8 team we've come to understand the circumstances
+which this optimization relates to.
 
-```js
-const net = require('net');
-const opts = { port: 8124 }
-const client = net.createConnection(opts, () => {
-  //'connect' listener
-  console.log('connected to server!');
-  client.write('world!\r\n');
-});
-```
+In the previous **Object allocation** benchmarks we assign a variable, set it
+to `null` and then reassign the variable a bunch of times to avoid triggering
+the special optimization case which we're going to look at now.
 
-Moreover these objects can be used just to call another function with
-custom data, and then completely discarded. When an object exits the
-context (call stack) that has defined it, we say it "escaped". This benchmark is
-about objects that do not escape, and are used within a single call
-stack and then discarded.
+In this benchmark we look at three cases:
+
+* allocating objects using object literals (*literal*)
+* allocating objects from an EcmaScript 2015 Class (*class*)
+* allocating objects from a constructor function (*constructor*)
+
+However the difference is, the reference to the object is not overwritten
+with additional object allocations, and the object is passed to another function
+which performs a task on the object.
+
+Let's take a look at the results!
 
 **Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/object-creation-inlining.js>
 
-Let's see the performance of hardcoded objects:
-
 ![](graphs/hardcoded-object-creation-bar.png)
 
-Then in V8 6.0 (Node 8.3) and 6.1 (Node 9) V8 can optimize the Object creation away
-if the object does not escape, avoiding completely the cost of object allocation itself!
-The benchmarks report fantastic results, over 500 million ops, mainly because it is actually
-doing nothing.
+Notice how V8 6.0 (Node 8.3) and 6.1 (Node 9) yield a massive jump in speed for this case,
+over 500 million operations per second, mainly because nothing is really happening once
+Turbofan applies the optimization. In this particular scenario, Turbofan is able to
+*abstract away* the object allocation allowing subsequent execution of logic that processes the object
+to essentially becomes a no-op.
 
-That's incredible.
+The benchmark code still doesn't fully demonstrate what it takes to trigger this
+optimization (because it's more about what's not there than what is) but the conditions it
+takes for this optimization to be applied by Turbofan are as follows.
+
+First, do not alter the content of the variable. That is don't reassign a variable with a new object
+once that variable has already been assigned.
+
+Secondly, the object must not outlive the function it was created in. That means, there should be
+no reference to that object after every function from that point in the stack has completed. The object
+*can* be passed to other functions, but if we add that object to a `this` context, or assign it
+to an outer scoped variable, or use it as the return value from the current function, or add it to
+another object that lives on after the stack has finished the optimization cannot be applied.
+
+The ramifications for this could be pretty cool.
+
+A common JavaScript pattern, particularly in Node, is to create an "options object" which specifies
+some options to a function call. For instance:
+
+```js
+const net = require('net')
+const opts = { port: 8124 }
+const client = net.createConnection(opts, () => {
+  //'connect' listener
+  console.log('connected to server!')
+  client.write('world!\r\n')
+})
+```
+
+In these situations, the options are generally just read and then discarded
+(or if not, in a lot of these scenarios, they *could* just be read and discarded).
+
+We love this optimization, we think it's incredible.
 
 ![](https://media.giphy.com/media/2mxA3QHH4aHFm/giphy.gif)
 
+_Edit: Thanks to Jakob Kummerow and the rest of the V8 team for helping us discover the underlying reasons for this particular behavior.
+As part of this research we discovered a performance regression in the new GC of V8, Orinoco.
+if you are interested check out
+<https://v8project.blogspot.it/2016/04/jank-busters-part-two-orinoco.html> and <https://bugs.chromium.org/p/v8/issues/detail?id=6663>_
+
 ### Polymorphic vs monomorphic code
 
-When we always input the same type of argument into a function (say, we always pass a string), we are using that function
-in a monomorphic way. Some functions are written to be polymorphic - which means that the function will process object with
-different types, or as they are more frequently called "shapes" or "hidden classes". Processing objects with different shapes
-through the same code can make for nice interfaces in some circumstances but has a negative impact on performance.
+When we always pass the same type of argument into a function (say, we always pass a string), we are using that function in a monomorphic way.
+
+Some functions are written to be polymorphic. We can think of a polymorphic function as a function
+that accepts different types *in the same argument position*. For instance a function may accept 
+either a string or an object as its first argument. However in this context when we say "type", we don't just mean string versus number versus object, we mean *object shape* (although JavaScript types 
+actually count as different object shapes as well). 
+
+The shape of an object is defined by its properties and values. For instance,
+in the following snippet, `obj1` and `obj2` are the same shape but `obj3` and `obj4` are different
+shapes to the rest:
+
+```js
+const obj1 = { a: 1 }
+const obj2 = { a: 5 }
+const obj3 = { a: 1, b: 2 }
+const obj4 = { b: 2 }
+```
+
+Processing objects with different shapes through the same code can make for nice interfaces in some circumstances but tends to have a negative impact on performance.
 
 Let's see how monomorphic and polymorphic cases do in our benchmarks.
 
-Here we investigate five cases:
+Here we investigate two cases:
 
 * a function where we process objects with different properties (`polymorphic`)
 * a function where we process objects with the same properties (`monomorphic`)
 
 **Code:** <https://github.com/davidmarkclements/v8-perf/blob/master/bench/polymorphic.js>
 
-
 ![](graphs/polymorphic-bar.png)
 
-The data visualized in our graph shows conclusively that monomorphic functions outperform polymorphic functions
-across all V8 versions tested. However, the performance of the polymorphic function improves from V8 5.9+ (at least Node 8.3).
+The data visualized in our graph shows conclusively that monomorphic functions outperform polymorphic functions across all V8 versions tested. However, the performance of the polymorphic function improves from V8 5.9+ (which means it improves from Node 8.3 which uses V8 6.0).
+
 Polymorphic functions are very common through the Node.js codebase, and
-they provide much flexibility through the APIs, seeing them being
-optimized might imply a better Node.js performance for some complex
-applications.
+they provide a great deal flexibility through the APIs. Thanks to this improvement 
+around polymorphic interaction, we may see a degree of improved
+performance in more complex Node.js applications.
 
 If we're writing code that needs to be optimal, that is a function that will be called many times over,
 then we should commit to call functions with the parameters with the same "shape".
@@ -533,6 +586,7 @@ a performance reward is coming.
 The raw data for this article can be found at: https://docs.google.com/spreadsheets/d/1mDt4jDpN_Am7uckBbnxltjROI9hSu6crf9tOa2YnSog/edit?usp=sharing
 
 Most of the microbenchmarks were taken on a Macbook Pro 2016, 3.3 GHz Intel Core i7 with 16 GB 2133 MHz LPDDR3,
-others (numbers, property removal, polymorphic) were taken on a MacBook Pro 2014, 3 GHz Intel Core i7 with 16 GB 1600 MHz DDR3. All the measurements
+others (numbers, property removal, polymorphic, object creation) were taken on a MacBook Pro 2014,
+3 GHz Intel Core i7 with 16 GB 1600 MHz DDR3. All the measurements
 between the different Node.js versions were taken on the same machine.
 We took great care in assuring that no other programs were interfering.
