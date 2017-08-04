@@ -430,43 +430,23 @@ Let's take a look at the results!
 Notice how V8 6.0 (Node 8.3) and 6.1 (Node 9) yield a massive jump in speed for this case,
 over 500 million operations per second, mainly because nothing is really happening once
 Turbofan applies the optimization. In this particular scenario, Turbofan is able to
-*abstract away* the object allocation allowing subsequent execution of logic that processes the object
-to essentially becomes a no-op.
+*optimize away* the object allocation because it's able to determine that subsequent 
+logic can be executed without requiring the existence of the actual object.
 
 The benchmark code still doesn't fully demonstrate what it takes to trigger this
-optimization (because it's more about what's not there than what is) but the conditions it
-takes for this optimization to be applied by Turbofan are as follows.
+optimization (because it's more about what's not there than what is) and the conditions
+it takes for this optimization to applied are complex.  
 
-First, do not alter the content of the variable. That is don't reassign a variable with a new object
-once that variable has already been assigned.
+However one condition which we know will definitely not allow for the object to be optimized away by Turbofan is as follows: 
 
-Secondly, the object must not outlive the function it was created in. That means, there should be
+The object must not outlive the function it was created in. That means, there should be
 no reference to that object after every function from that point in the stack has completed. The object
 *can* be passed to other functions, but if we add that object to a `this` context, or assign it
-to an outer scoped variable, or use it as the return value from the current function, or add it to
-another object that lives on after the stack has finished the optimization cannot be applied.
+to an outer scoped variable, or add it to another object that lives on after the stack has finished the optimization cannot be applied.
 
-The ramifications for this could be pretty cool.
-
-A common JavaScript pattern, particularly in Node, is to create an "options object" which specifies
-some options to a function call. For instance:
-
-```js
-const net = require('net')
-const opts = { port: 8124 }
-const client = net.createConnection(opts, () => {
-  //'connect' listener
-  console.log('connected to server!')
-  client.write('world!\r\n')
-})
-```
-
-In these situations, the options are generally just read and then discarded
-(or if not, in a lot of these scenarios, they *could* just be read and discarded).
-
-We love this optimization, we think it's incredible.
-
-![](https://media.giphy.com/media/2mxA3QHH4aHFm/giphy.gif)
+The ramifications for this could be pretty cool, however it's difficult to predict all the
+conditions where such an optimization occurs. Nevertheless, it may lead yield useful speedups
+when the complex set of conditions are met.
 
 _Edit: Thanks to Jakob Kummerow and the rest of the V8 team for helping us discover the underlying reasons for this particular behavior.
 As part of this research we discovered a performance regression in the new GC of V8, Orinoco.
