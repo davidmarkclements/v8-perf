@@ -7,6 +7,9 @@ Authors: [David Mark Clements](https://twitter.com/davidmarkclem) and
 Reviewers: [Franziska Hinkelmann](https://twitter.com/fhinkel) and
 [Benedikt Meurer](https://twitter.com/bmeurer) from the V8 team.
 
+**Update: Node.js 8.3.0 will [ship V8 6.0 with Turbofan](https://github.com/nodejs/node/pull/14594). Validate your
+application with `NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/rc nvm i 8.3.0-rc.0`**
+
 Since it's inception Node.js has depended on the V8 JavaScript engine to provide
 code execution in the language we all know and love. The V8 JavaScript engine is
 a JavaScript VM written by Google for the Chrome browser. From the beginning,
@@ -583,6 +586,7 @@ a performance reward is coming.
 The raw data for this article can be found at: https://docs.google.com/spreadsheets/d/1mDt4jDpN_Am7uckBbnxltjROI9hSu6crf9tOa2YnSog/edit?usp=sharing
 
 Most of the microbenchmarks were taken on a Macbook Pro 2016, 3.3 GHz Intel Core i7 with 16 GB 2133 MHz LPDDR3,
-others (numbers, property removal, polymorphic) were taken on a MacBook Pro 2014, 3 GHz Intel Core i7 with 16 GB 1600 MHz DDR3. All the measurements
+others (numbers, property removal, polymorphic, object creation) were taken on a MacBook Pro 2014,
+3 GHz Intel Core i7 with 16 GB 1600 MHz DDR3. All the measurements
 between the different Node.js versions were taken on the same machine.
 We took great care in assuring that no other programs were interfering.
