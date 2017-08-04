@@ -396,26 +396,26 @@ _Edit: Jakob Kummerow noted in [http://disq.us/p/1kvomfk](http://disq.us/p/1kvom
 can optimize away the object allocation in this specific microbenchmark,
 leading to incorrect results so this article has been edited accordingly._
 
-#### Single-stack object allocation
+#### Object allocation elimination
 
 While collating our results for this article, we came across a really
-neat optimization that Turbofan brings to a certain category of 
-object allocation. Originally we mistook this for all object allocation,.
+neat optimization that Turbofan brings to a certain category of
+object allocation. Originally we mistook this for all object allocation,
 thanks to input from the V8 team we've come to understand the circumstancess
 which this optimization relates to.
 
 In the previous **Object allocation** benchmarks we assign a variable, set it
 to `null` and then reassign the variable a bunch of times to avoid triggering
-the special optimization case which we're going to look at now. 
+the special optimization case which we're going to look at now.
 
-In this benchmark we look at three cases: 
+In this benchmark we look at three cases:
 
 * allocating objects using object literals (*literal*)
 * allocating objects from an EcmaScript 2015 Class (*class*)
 * allocating objects from a constructor function (*constructor*)
 
 However the difference is, the reference to the object is not overwritten
-with additional object allocations, and the object is passed to another function 
+with additional object allocations, and the object is passed to another function
 which performs a task on the object.
 
 Let's take a look at the results!
@@ -426,22 +426,22 @@ Let's take a look at the results!
 
 Notice how V8 6.0 (Node 8.3) and 6.1 (Node 9) yield a massive jump in speed for this case,
 over 500 million operations per second, mainly because nothing is really happening once
-Turbofan applies the optimization. In this particular scenario, Turbofan is able to 
+Turbofan applies the optimization. In this particular scenario, Turbofan is able to
 *abstract away* the object allocation allowing subsequent execution of logic that processes the object
 to essentially becomes a no-op.
 
 The benchmark code still doesn't fully demonstrate what it takes to trigger this
-optimization (because it's more about what's not there than what is) but the conditions it 
+optimization (because it's more about what's not there than what is) but the conditions it
 takes for this optimization to be applied by Turbofan are as follows.
 
-First, do not reallocate an object reference. That is don't reassign a variable with a new object
-once that variable has already been assigned. 
+First, do not alter the content of the variable. That is don't reassign a variable with a new object
+once that variable has already been assigned.
 
-Secondly, the object has to live and die in the same call stack. That means, there should be 
-no reference to that object after every function in a particular stack has completed. The object
+Secondly, The object must not survive the current function. That means, there should be
+no reference to that object after every function from that point in the stack has completed. The object
 *can* be passed to other functions, but if we add that object to a `this` context, or assign it
-to an outer scoped variable, or add it to another object that lives on after the stack has finished
-the optimization cannot be applied.   
+to an outer scoped variable, or use it as the return value from the current function, or add it to
+another object that lives on after the stack has finished the optimization cannot be applied.
 
 The ramifications for this could be pretty cool.
 
@@ -465,7 +465,10 @@ We love this optimization, we think it's incredible.
 
 ![](https://media.giphy.com/media/2mxA3QHH4aHFm/giphy.gif)
 
-_Edit: Thanks to Jakob Kummerow and the rest of the V8 team for helping us discover the underlying reasons for this particular behavior._
+_Edit: Thanks to Jakob Kummerow and the rest of the V8 team for helping us discover the underlying reasons for this particular behavior.
+As part of this research we discovered a performance regression in the new GC of V8, Orinoco.
+if you are interested check out
+<https://v8project.blogspot.it/2016/04/jank-busters-part-two-orinoco.html> and <https://bugs.chromium.org/p/v8/issues/detail?id=6663>_
 
 ### Polymorphic vs monomorphic code
 
