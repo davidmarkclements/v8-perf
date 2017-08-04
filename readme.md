@@ -426,7 +426,9 @@ Let's take a look at the results!
 
 Notice how V8 6.0 (Node 8.3) and 6.1 (Node 9) yield a massive jump in speed for this case,
 over 500 million operations per second, mainly because nothing is really happening once
-Turbofan applies the optimization.
+Turbofan applies the optimization. In this particular scenario, Turbofan is able to 
+*abstract away* the object allocation allowing subsequent execution of logic that processes the object
+to essentially becomes a no-op.
 
 The benchmark code still doesn't fully demonstrate what it takes to trigger this
 optimization (because it's more about what's not there than what is) but the conditions it 
