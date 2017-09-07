@@ -376,6 +376,10 @@ So there may be some more work to do when it comes to iterating over objects.
 Also, for those who've used `for`-`in` for its performance benefits it's going to be a painful
 moment when we lose a large chunk of speed with no alternative approach available.
 
+_Note: the `for`-ìn` loops performance has been fixed in V8, see
+http://benediktmeurer.de/2017/09/07/restoring-for-in-peak-performance/
+for more details. This change will likely be integrated by Node 9._
+
 ### Object allocation
 
 We allocate objects *all the time* so this is a great area to measure.
